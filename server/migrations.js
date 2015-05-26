@@ -18,13 +18,14 @@ Migrations.run = function () {
 
 // Remove all memory of migrations, allow 'add's to take effect
 // INTENDED FOR TEST/DEV USE ONLY
-Migrations._reset = function () {
+Migrations._reset = function (sameProcess) {
   if (process.env.METEOR_ENV === "production" || process.env.NODE_ENV === "production"){
     console.warn("Refusing to reset Migrations in production");
     return;
   }
   Migrations.collection.remove({});
-  process.exit(); //it comes back, don't worry
+  Migrations._migrations = {};
+  sameProcess || process.exit(); //it comes back, don't worry
 };
 
 function unstartedMigrations () {

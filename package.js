@@ -24,5 +24,5 @@ Package.onTest(function (api) {
   api.use("okgrow:migrations");
 
   api.addFiles("tests/server/index.js", "server");
-  api.addFiles("tests/server/startup.js", "server");
+  api.addFiles("tests/server/migrate.js", "server");
 });
