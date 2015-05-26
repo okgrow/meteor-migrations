@@ -7,7 +7,7 @@ Meteor.startup(function () {
     console.log("No migrations to apply");
     return
   }
-  
+
   console.log("Applying migrations", unstarted);
 
   unstarted.forEach(runExpand);
@@ -16,11 +16,10 @@ Meteor.startup(function () {
   Migrations.unstarted = unstartedMigrations;
 });
 
-
 function unstartedMigrations () {
   var pending = Migrations.collection.find({
     expandStartedAt: {$exists: false}
-  });
+  }, {$sort: {name: 1}});
 
   return pending.fetch().map(function (m) { return m.name });
 }
