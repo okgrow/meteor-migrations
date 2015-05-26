@@ -13,6 +13,8 @@ Package.onUse(function(api) {
   api.addFiles("shared/index.js", ["client", "server"]);
   api.addFiles("server/index.js", "server");
 
+  api.addFiles("server/startup.js", "server");
+
   api.export("Migrations");
 });
 
@@ -21,5 +23,4 @@ Package.onTest(function (api) {
   api.use("okgrow:migrations");
 
   api.addFiles("tests/server/index.js", "server");
-
 });

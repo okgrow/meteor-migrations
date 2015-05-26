@@ -18,8 +18,7 @@ Migrations.add = function (migration) {
     throw new Error("Duplicate migration: " + migration.name);
   }
 
-  var record = {name: migration.name};
-  self.collection.upsert(record, record);
+  self.collection.upsert({name: migration.name}, {$set: {name: migration.name}});
 
   self._migrations[migration.name] = {
     expand: migration.expand,
