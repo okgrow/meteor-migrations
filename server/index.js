@@ -9,8 +9,8 @@ Migrations.add = function (migration) {
 
   check(migration, {
     name: String,
-    description: Match.Optional(String),
     expand: Function,
+    description: Match.Optional(String),
     contract: Match.Optional(Function)
   });
 
