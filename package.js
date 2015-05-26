@@ -11,6 +11,7 @@ Package.onUse(function(api) {
   api.use(["underscore"]);
 
   api.addFiles("shared/index.js", ["client", "server"]);
+  api.addFiles("server/index.js", "server");
 
   api.export("Migrations");
 });
@@ -19,6 +20,6 @@ Package.onTest(function (api) {
   api.use("tinytest");
   api.use("okgrow:migrations");
 
-  api.addFiles("tests/shared/index.js", ["client", "server"]);
+  api.addFiles("tests/server/index.js", "server");
 
 });
