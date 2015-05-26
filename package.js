@@ -7,24 +7,17 @@ Package.describe({
 
 Package.onUse(function(api) {
   api.versionsFrom("1.0.1");
-  api.use(["meteor", "ddp", "jquery"]);
-  
+  api.use(["meteor", "underscore"]);
+
   api.addFiles("shared/index.js", ["client", "server"]);
 
   api.export("Migrations");
 });
 
-
-
-  
-    
-    
-    Package.onTest(function (api) {
+Package.onTest(function (api) {
   api.use("tinytest");
   api.use("okgrow:migrations");
-  
+
   api.addFiles("tests/shared/index.js", ["client", "server"]);
 
-});    
-  
-  
+});
