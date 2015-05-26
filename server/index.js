@@ -1,5 +1,7 @@
 /* global Migrations:true */
 
+Migrations.collection._ensureIndex({name: 1}, {unique: 1});
+
 /** The expand/contract functions to run */
 Migrations._migrations = {}
 
