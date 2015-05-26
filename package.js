@@ -7,7 +7,8 @@ Package.describe({
 
 Package.onUse(function(api) {
   api.versionsFrom("1.0.1");
-  api.use(["meteor", "underscore"]);
+  api.use(["mongo", "minimongo"]);
+  api.use(["underscore"]);
 
   api.addFiles("shared/index.js", ["client", "server"]);
 
