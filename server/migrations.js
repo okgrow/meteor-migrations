@@ -36,8 +36,21 @@ function unstartedMigrations () {
   return pending.fetch().map(function (m) { return m.name });
 }
 
+function log(phase,name,state) {
+  var now = moment().format("YYYY-MM-DD h:mma")
+  console.log("--- "+now+" - migration "+phase+" phase of: "+name+" - "+state)
+}
+
 function runExpand (name) {
-  runPhase("expand", name);
+  if (requirementsMet(name))
+    runPhase("expand", name)
+  else
+    log("expand", name, "prepempted: no records")
+}
+
+function requirementsMet(name) {
+  var requiredFn = Migrations._migrations[name].required
+  return requiredFn ? requiredFn() : true
 }
 
 function runContract (name) {
@@ -45,7 +58,7 @@ function runContract (name) {
 }
 
 function runPhase (phase, name) {
-  console.log("running " + phase + " phase of:", name);
+  console.log(phase, name, "is running");
   var phaseFn = Migrations._migrations[name][phase];
 
   timestamp(name, phase, "StartedAt");
