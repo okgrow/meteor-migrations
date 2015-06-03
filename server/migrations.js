@@ -2,19 +2,33 @@ Migrations.run = function () {
 
   console.log("Beginning DB Migrations");
 
-  var unstarted = unstartedMigrations();
-  if(unstarted.length === 0){
-    console.log("No migrations to apply");
-    return
+  console.log(Migrations._migrations)
+  var unexpanded = unexpandedMigrations();
+  if (unexpanded.length === 0) {
+    console.log("No expand migrations found");
+  } else {
+    console.log("Applying migrations", unexpanded);
+    unexpanded.forEach(runExpand);
   }
 
-  console.log("Applying migrations", unstarted);
-
-  unstarted.forEach(runExpand);
+  var uncontracted = uncontractedMigrations();
+  if (uncontracted.length === 0) {
+    console.log("No contract migrations found")
+  } else {
+    console.log("Applying migrations", uncontracted);
+    uncontracted.forEach(runContract);
+  }
 
   // // debugging variables
-  Migrations.unstarted = unstartedMigrations;
+  Migrations.unexpanded = unexpandedMigrations;
+  Migrations.uncontracted = uncontractedMigrations;
 };
+
+// Return true is exend has been run successfully
+Migrations.isExpanded = function(name) {
+  return Migrations.collection.find(
+    {name: name, expandCompletedAt: {$exists: true}}).count() > 0
+}
 
 // Remove all memory of migrations, allow 'add's to take effect
 // INTENDED FOR TEST/DEV USE ONLY
@@ -28,12 +42,26 @@ Migrations._reset = function (sameProcess) {
   sameProcess || process.exit(); //it comes back, don't worry
 };
 
-function unstartedMigrations () {
-  var pending = Migrations.collection.find({
-    expandStartedAt: {$exists: false}
-  }, {$sort: {name: 1}});
+function unexpandedMigrations () {
+  var pending = Migrations.collection.find(
+    {expandStartedAt: {$exists: false}},
+    {$sort: {name: 1}});
 
   return pending.fetch().map(function (m) { return m.name });
+}
+
+function uncontractedMigrations () {
+  var pending = Migrations.collection.find(
+    { contractStartedAt: {$exists: false}},
+    {$sort: {name: 1}});
+
+  var names = pending.fetch().map(function (m) { return m.name });
+  console.log(names)
+  return _.select(names, function(name) {
+    console.log(name)
+    console.log(Migrations._migrations[name])
+    return Migrations._migrations[name].contract !== undefined
+  })
 }
 
 function log(phase,name,state) {
@@ -49,16 +77,20 @@ function runExpand (name) {
 }
 
 function requirementsMet(name) {
+  console.log(name,Migrations._migrations[name])
   var requiredFn = Migrations._migrations[name].required
   return requiredFn ? requiredFn() : true
 }
 
 function runContract (name) {
-  runPhase("contract", name);
+  if (Migrations.isExpanded(name))
+    runPhase("contract", name);
+  else
+    log("contract", name, "preempted: expand incomplete")
 }
 
 function runPhase (phase, name) {
-  console.log(phase, name, "is running");
+  log(phase, name, "is running");
   var phaseFn = Migrations._migrations[name][phase];
 
   timestamp(name, phase, "StartedAt");
