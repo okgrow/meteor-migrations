@@ -2,22 +2,25 @@ Migrations.run = function () {
 
   console.log("Beginning DB Migrations");
 
-  console.log(Migrations._migrations)
   var unexpanded = unexpandedMigrations();
   if (unexpanded.length === 0) {
-    console.log("No expand migrations found");
+    console.log("  No expand migrations found");
   } else {
-    console.log("Applying migrations", unexpanded);
+    console.log("  Applying expand migrations", unexpanded);
     unexpanded.forEach(runExpand);
   }
 
-  var uncontracted = uncontractedMigrations();
-  if (uncontracted.length === 0) {
-    console.log("No contract migrations found")
-  } else {
-    console.log("Applying migrations", uncontracted);
-    uncontracted.forEach(runContract);
-  }
+  Migrations.contractDelay = 5
+
+  Meteor.setTimeout(function() {
+    var uncontracted = uncontractedMigrations();
+    if (uncontracted.length === 0) {
+      console.log("  No contract migrations found")
+    } else {
+      console.log("  Applying contract migrations", uncontracted);
+      uncontracted.forEach(runContract);
+    }
+  }, Migrations.contractDelay*1000)
 
   // // debugging variables
   Migrations.unexpanded = unexpandedMigrations;
@@ -56,10 +59,7 @@ function uncontractedMigrations () {
     {$sort: {name: 1}});
 
   var names = pending.fetch().map(function (m) { return m.name });
-  console.log(names)
   return _.select(names, function(name) {
-    console.log(name)
-    console.log(Migrations._migrations[name])
     return Migrations._migrations[name].contract !== undefined
   })
 }
@@ -70,16 +70,7 @@ function log(phase,name,state) {
 }
 
 function runExpand (name) {
-  if (requirementsMet(name))
-    runPhase("expand", name)
-  else
-    log("expand", name, "prepempted: no records")
-}
-
-function requirementsMet(name) {
-  console.log(name,Migrations._migrations[name])
-  var requiredFn = Migrations._migrations[name].required
-  return requiredFn ? requiredFn() : true
+  runPhase("expand", name)
 }
 
 function runContract (name) {
@@ -93,11 +84,9 @@ function runPhase (phase, name) {
   log(phase, name, "is running");
   var phaseFn = Migrations._migrations[name][phase];
 
-  timestamp(name, phase, "StartedAt");
-
   // run phase, dealing with/noting exceptions
+  timestamp(name, phase, "StartedAt");
   phaseFn();
-
   timestamp(name, phase, "CompletedAt");
 }
 

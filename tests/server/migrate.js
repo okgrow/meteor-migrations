@@ -20,29 +20,3 @@ Tinytest.add("Migrations - Full Cycle - allowed", function (test) {
 
   Migrations._reset(true);
 });
-
-Tinytest.add("Migrations - Full Cycle - preempted", function (test) {
-  var x = 0;
-  var y = 0;
-  Migrations._reset(true);
-  Migrations.add({
-    name: "testFullPreempt",
-    required: function() {
-      return false
-    },
-    expand: function () {
-      x = x+1;
-    },
-    contract: function() {
-      y = y+1;
-    }
-  });
-
-  test.equal(x, 0, 'expand initial');
-  test.equal(y, 0, 'contact initial');
-  Migrations.run();
-  test.equal(x, 0, 'expand was preempted');
-  test.equal(y, 0, 'contract was run when expand was prempted');
-
-  Migrations._reset(true);
-});
