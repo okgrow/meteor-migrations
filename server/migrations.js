@@ -1,3 +1,11 @@
+Migrations.setContractDelay = function (delay) {
+  Migrations.contractDelay = delay;
+};
+
+Migrations.getContractDelay = function () {
+  return Migrations.contractDelay === undefined ? 60 : Migrations.contractDelay;
+};
+
 Migrations.run = function () {
 
   console.log("Beginning DB Migrations");
@@ -10,8 +18,6 @@ Migrations.run = function () {
     unexpanded.forEach(runExpand);
   }
 
-  Migrations.contractDelay = 5
-
   Meteor.setTimeout(function() {
     var uncontracted = uncontractedMigrations();
     if (uncontracted.length === 0) {
@@ -20,7 +26,7 @@ Migrations.run = function () {
       console.log("  Applying contract migrations", uncontracted);
       uncontracted.forEach(runContract);
     }
-  }, Migrations.contractDelay*1000)
+  }, (Migrations.getContractDelay()*1000) + 1)
 
   // // debugging variables
   Migrations.unexpanded = unexpandedMigrations;

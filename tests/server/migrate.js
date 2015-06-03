@@ -1,4 +1,7 @@
-Tinytest.add("Migrations - Full Cycle - allowed", function (test) {
+Tinytest.addAsync("Migrations - Full Cycle - allowed", function (test, next) {
+
+  Migrations.setContractDelay(0);
+
   var x = 0;
   var y = 0;
   Migrations._reset(true);
@@ -15,8 +18,11 @@ Tinytest.add("Migrations - Full Cycle - allowed", function (test) {
   test.equal(x, 0, 'expand initial');
   test.equal(y, 0, 'contact initial');
   Migrations.run();
-  test.equal(x, 1, 'expand was run');
-  test.equal(y, 1, 'contract was run');
+  Meteor.setTimeout(function () {
+    test.equal(x, 1, 'expand was run');
+    test.equal(y, 1, 'contract was run');  //make this pass on a set interval
 
-  Migrations._reset(true);
+    Migrations._reset(true);
+    next();
+  }, 500)
 });
