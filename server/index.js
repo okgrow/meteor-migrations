@@ -11,6 +11,7 @@ Migrations.add = function (migration) {
 
   check(migration, {
     name: String,
+    required: Match.Optional(Function),
     expand: Function,
     description: Match.Optional(String),
     contract: Match.Optional(Function)
@@ -23,6 +24,7 @@ Migrations.add = function (migration) {
   self.collection.upsert({name: migration.name}, {$set: {name: migration.name}});
 
   self._migrations[migration.name] = {
+    required: migration.required,
     expand: migration.expand,
     contract: migration.contract
   };

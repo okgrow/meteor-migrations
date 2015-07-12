@@ -1,20 +1,43 @@
+Migrations.setContractDelay = function (delay) {
+  Migrations.contractDelay = delay;
+};
+
+Migrations.getContractDelay = function () {
+  return Migrations.contractDelay === undefined ? 60 : Migrations.contractDelay;
+};
+
 Migrations.run = function () {
 
   console.log("Beginning DB Migrations");
 
-  var unstarted = unstartedMigrations();
-  if(unstarted.length === 0){
-    console.log("No migrations to apply");
-    return
+  var unexpanded = unexpandedMigrations();
+  if (unexpanded.length === 0) {
+    console.log("  No expand migrations found");
+  } else {
+    console.log("  Applying expand migrations", unexpanded);
+    unexpanded.forEach(runExpand);
   }
 
-  console.log("Applying migrations", unstarted);
-
-  unstarted.forEach(runExpand);
+  Meteor.setTimeout(function() {
+    var uncontracted = uncontractedMigrations();
+    if (uncontracted.length === 0) {
+      console.log("  No contract migrations found")
+    } else {
+      console.log("  Applying contract migrations", uncontracted);
+      uncontracted.forEach(runContract);
+    }
+  }, (Migrations.getContractDelay()*1000) + 1)
 
   // // debugging variables
-  Migrations.unstarted = unstartedMigrations;
+  Migrations.unexpanded = unexpandedMigrations;
+  Migrations.uncontracted = uncontractedMigrations;
 };
+
+// Return true is exend has been run successfully
+Migrations.isExpanded = function(name) {
+  return Migrations.collection.find(
+    {name: name, expandCompletedAt: {$exists: true}}).count() > 0
+}
 
 // Remove all memory of migrations, allow 'add's to take effect
 // INTENDED FOR TEST/DEV USE ONLY
@@ -28,31 +51,48 @@ Migrations._reset = function (sameProcess) {
   sameProcess || process.exit(); //it comes back, don't worry
 };
 
-function unstartedMigrations () {
-  var pending = Migrations.collection.find({
-    expandStartedAt: {$exists: false}
-  }, {$sort: {name: 1}});
+function unexpandedMigrations () {
+  var pending = Migrations.collection.find(
+    {expandStartedAt: {$exists: false}},
+    {$sort: {name: 1}});
 
   return pending.fetch().map(function (m) { return m.name });
 }
 
+function uncontractedMigrations () {
+  var pending = Migrations.collection.find(
+    { contractStartedAt: {$exists: false}},
+    {$sort: {name: 1}});
+
+  var names = pending.fetch().map(function (m) { return m.name });
+  return _.select(names, function(name) {
+    return Migrations._migrations[name].contract !== undefined
+  })
+}
+
+function log(phase,name,state) {
+  var now = moment().format("YYYY-MM-DD h:mma")
+  console.log("--- "+now+" - migration "+phase+" phase of: "+name+" - "+state)
+}
+
 function runExpand (name) {
-  runPhase("expand", name);
+  runPhase("expand", name)
 }
 
 function runContract (name) {
-  runPhase("contract", name);
+  if (Migrations.isExpanded(name))
+    runPhase("contract", name);
+  else
+    log("contract", name, "preempted: expand incomplete")
 }
 
 function runPhase (phase, name) {
-  console.log("running " + phase + " phase of:", name);
+  log(phase, name, "is running");
   var phaseFn = Migrations._migrations[name][phase];
 
-  timestamp(name, phase, "StartedAt");
-
   // run phase, dealing with/noting exceptions
+  timestamp(name, phase, "StartedAt");
   phaseFn();
-
   timestamp(name, phase, "CompletedAt");
 }
 
