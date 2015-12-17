@@ -8,7 +8,7 @@ Package.describe({
 Package.onUse(function (api) {
   api.versionsFrom("1.0.1");
   api.use(["mongo", "minimongo"]);
-  api.use(["underscore", "check", "mrt:moment"]);
+  api.use(["underscore", "check", "momentjs:moment@2.10.6"]);
 
   api.addFiles("shared/index.js", ["client", "server"]);
 
